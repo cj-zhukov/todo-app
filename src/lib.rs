@@ -1,11 +1,11 @@
 pub mod config;
-pub mod error;
 pub mod routes;
+pub mod db;
 
 use config::Config;
-use error::Result;
 use routes::{alive::ping, todos::*};
 
+use anyhow::Result;
 use axum::{routing::get, serve::Serve, Router};
 use sqlx::postgres::PgPoolOptions;
 
