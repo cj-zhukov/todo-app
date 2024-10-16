@@ -3,10 +3,12 @@ pub mod routes;
 pub mod db;
 
 use config::Config;
+use db::db::Todo;
 use routes::{alive::ping, todos::*};
 
 use anyhow::Result;
 use axum::{routing::get, serve::Serve, Router};
+use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgPoolOptions;
 
 pub struct Application {
@@ -51,4 +53,10 @@ impl Application {
 
         Ok(())
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Response {
+    pub message: String,
+    pub content: Option<Vec<Todo>>,
 }

@@ -5,7 +5,7 @@ use sqlx::PgPool;
 
 impl Todo {
     pub async fn list(pool: PgPool) -> Result<Vec<Todo>> {
-        let sql = format!("select * from {} limit {};", Self::table_name(), MAX_ROWS);
+        let sql = format!("select * from {} limit {}", Self::table_name(), MAX_ROWS);
         let query = sqlx::query_as::<_, Self>(&sql);
         let data = query.fetch_all(&pool).await?;
 
