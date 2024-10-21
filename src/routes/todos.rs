@@ -1,8 +1,15 @@
-use crate::{db::{db::Todo, db_write_ops::{CreateTodo, UpdateTodo}}, Response};
+use crate::db::{db::Todo, db_write_ops::{CreateTodo, UpdateTodo}};
 
 use anyhow::Result;
 use axum::{extract::{Path, State}, http::StatusCode, response::IntoResponse, Json};
+use serde::{Serialize, Deserialize};
 use sqlx::PgPool;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Response {
+    pub message: String,
+    pub content: Option<Vec<Todo>>,
+}
 
 pub async fn todo_list(State(pool): State<PgPool>) -> Result<impl IntoResponse, Json<Response>> {
     let data = Todo::list(pool).await.map_err(|_|
@@ -43,12 +50,12 @@ pub async fn todo_create(
     State(pool): State<PgPool>, 
     Json(new_todo): Json<CreateTodo>,
 ) -> Result<impl IntoResponse, Json<Response>> {
-    let data = Todo::create(pool, new_todo).await.map_err(|_|
+    let data = Todo::create(pool, new_todo).await.map_err(|_| {
         Json(Response {
             message: "Failed creating todo".to_string(),
             content: None,
         })
-    )?;
+    })?;
 
     let res = Json(Response {
         message: "Todo created successfully".to_string(),
