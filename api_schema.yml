@@ -1,0 +1,54 @@
+openapi: 3.0.0
+info:
+  title: Todo Service App
+  description: Rust app that stores todo in postgres database with axum and sqlx 
+  version: 1.0.0
+
+servers:
+  - url: 'http://todos.com/api'
+    description: Main server
+
+paths:
+  /alive:
+    get:
+      summary: Check is service alive
+      description: This route serves checking service status
+      responses:
+        '200':
+          description: Service is alive
+
+  /todos:
+    get:
+      summary: List all todo tasks
+      description: This route serves getting all todo tasks
+      responses:
+        '200':
+          description: List all todo
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      summary: Create a new todo task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body:
+                  type: string
+              example:
+                body: foo
+      responses:
+        '201':
+          description: Todo task created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Todo task created successfully

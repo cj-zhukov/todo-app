@@ -24,7 +24,7 @@ pub async fn todo_list(State(pool): State<PgPool>) -> Result<impl IntoResponse, 
         content: Some(data),
     });
 
-    Ok(res)
+    Ok((StatusCode::OK, res))
 }
 
 pub async fn todo_read(
@@ -43,7 +43,7 @@ pub async fn todo_read(
         content: Some(vec![data]),
     });
 
-    Ok(res)
+    Ok((StatusCode::OK, res))
 }
 
 pub async fn todo_create(
@@ -82,7 +82,7 @@ pub async fn todo_update(
         content: Some(vec![data])
     });
 
-    Ok(res)
+    Ok((StatusCode::OK, res))
 }
 
 pub async fn todo_delete(
@@ -101,5 +101,5 @@ pub async fn todo_delete(
         content: Some(vec![data])
     });
 
-    Ok(res)
+    Ok((StatusCode::OK, res))
 }
