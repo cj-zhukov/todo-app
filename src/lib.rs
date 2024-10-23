@@ -1,6 +1,7 @@
 pub mod config;
-pub mod routes;
 pub mod db;
+pub mod routes;
+pub mod utils;
 
 use config::Config;
 use routes::{alive::ping, todos::*};
@@ -19,8 +20,8 @@ impl Application {
         Self { server, address }
     }
 
-    pub async fn build(config: Config) -> Result<Self> {
-        let address = format!("{}:{}", config.app_server, config.app_port);
+    pub async fn build(config: Config, address: &str) -> Result<Self> {
+        // let address = format!("{}:{}", config.app_server, config.app_port);
         
         let url = format!("postgres://{}:{}@{}:{}/{}", config.db_user, config.db_password, config.db_server, config.db_port, config.db_name);
         let pool = PgPoolOptions::new()

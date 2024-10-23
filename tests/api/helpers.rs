@@ -1,4 +1,8 @@
-use todo_app::{Application, config::Config};
+use todo_app::{
+    Application, 
+    config::Config,
+    utils::constants::test,
+};
 
 use anyhow::Result;
 use reqwest::Client;
@@ -11,7 +15,7 @@ pub struct TestApp {
 impl TestApp {
     pub async fn new() -> Result<Self> {
         let config = Config::new("config_test.json").await?;
-        let app = Application::build(config).await?;
+        let app = Application::build(config, test::APP_ADDRESS).await?;
         let address = format!("http://{}", app.address.clone());
 
         #[allow(clippy::let_underscore_future)]
