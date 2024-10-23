@@ -3,7 +3,9 @@ use lazy_static::lazy_static;
 pub mod test {
     pub const APP_ADDRESS: &str = "127.0.0.1:8080";
     pub const DB_ADDRESS: &str = "127.0.0.1:5432";
+    pub const TABLE_NAME: &str = "todos";
     pub const DB_MAX_CONNECTIONS: u32 = 10;
+    pub const MAX_ROWS: u32 = 1000;
 }
 
 lazy_static! {

@@ -1,4 +1,6 @@
-use super::db::{Todo, MAX_ROWS};
+use crate::utils::constants::test::MAX_ROWS;
+
+use super::db::Todo;
 
 use anyhow::Result;
 use sqlx::PgPool;
