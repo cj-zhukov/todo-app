@@ -1,9 +1,9 @@
-use crate::db::{db::Todo, db_write_ops::{CreateTodo, UpdateTodo}};
-
 use anyhow::Result;
 use axum::{extract::{Path, State}, http::StatusCode, response::IntoResponse, Json};
 use serde::{Serialize, Deserialize};
 use sqlx::PgPool;
+
+use crate::db::{db::Todo, db_write_ops::{CreateTodo, UpdateTodo}};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Response {

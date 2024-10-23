@@ -1,7 +1,5 @@
 use todo_app::{
-    Application, 
-    config::Config,
-    utils::constants::test,
+    utils::constants::test, Application, DB
 };
 
 use anyhow::Result;
@@ -14,8 +12,10 @@ pub struct TestApp {
 
 impl TestApp {
     pub async fn new() -> Result<Self> {
-        let config = Config::new("config_test.json").await?;
-        let app = Application::build(config, test::APP_ADDRESS).await?;
+        let db = DB::build(test::DB_ADDRESS, "postgres", "postgres", "demo", 10).await?;
+        db.run_migrations().await?;
+        let app = Application::build(test::APP_ADDRESS, db).await?;
+
         let address = format!("http://{}", app.address.clone());
 
         #[allow(clippy::let_underscore_future)]
