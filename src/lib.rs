@@ -7,7 +7,6 @@ pub mod routes;
 pub mod utils;
 
 use routes::{alive::ping, todos::*};
-
 pub struct Application {
     server: Serve<Router, Router>,
     pub address: String,
