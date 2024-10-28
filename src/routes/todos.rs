@@ -1,9 +1,12 @@
-use anyhow::Result;
 use axum::{extract::{Path, State}, http::StatusCode, response::IntoResponse, Json};
 use serde::{Serialize, Deserialize};
 use sqlx::PgPool;
 
-use crate::db::{db::Todo, db_write_ops::{CreateTodo, UpdateTodo}};
+use crate::db::{
+    db::Todo, 
+    db_write_ops::{CreateTodo, UpdateTodo}
+};
+use crate::error::AppError;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Response {
@@ -11,16 +14,12 @@ pub struct Response {
     pub content: Option<Vec<Todo>>,
 }
 
-pub async fn todo_list(State(pool): State<PgPool>) -> Result<impl IntoResponse, Json<Response>> {
-    let data = Todo::list(pool).await.map_err(|_|
-        Json(Response {
-            message: "Failed listing todo".to_string(),
-            content: None,
-        })
-    )?;
+pub async fn todo_list(State(pool): State<PgPool>) -> Result<impl IntoResponse, AppError> {
+    let data = Todo::list(pool).await
+        .map_err(|_| AppError::UnexpectedError)?;
     
     let res = Json(Response {
-        message: "Listing todo".to_string(),
+        message: "Listing todos".to_string(),
         content: Some(data),
     });
 
@@ -30,16 +29,17 @@ pub async fn todo_list(State(pool): State<PgPool>) -> Result<impl IntoResponse, 
 pub async fn todo_read(
     State(pool): State<PgPool>, 
     Path(id): Path<i64>,
-) -> Result<impl IntoResponse, Json<Response>> {
-    let data = Todo::read(pool, id).await.map_err(|_|
-        Json(Response {
-            message: format!("Failed listing todo id: {}", id),
-            content: None,
-        })
-    )?;
+) -> Result<impl IntoResponse, AppError> {
+    let data = match Todo::read(pool, id).await {
+        Ok(res) => res,
+        Err(e) => match e {
+            sqlx::Error::RowNotFound => return Err(AppError::TodoNotFound),
+            _ => return Err(AppError::UnexpectedError),
+        }
+    };
 
     let res = Json(Response {
-        message: "Listing todo".to_string(),
+        message: format!("Listing todo is: {}", id),
         content: Some(vec![data]),
     });
 
@@ -49,13 +49,9 @@ pub async fn todo_read(
 pub async fn todo_create(
     State(pool): State<PgPool>, 
     Json(new_todo): Json<CreateTodo>,
-) -> Result<impl IntoResponse, Json<Response>> {
-    let data = Todo::create(pool, new_todo).await.map_err(|_| {
-        Json(Response {
-            message: "Failed creating todo".to_string(),
-            content: None,
-        })
-    })?;
+) ->  Result<impl IntoResponse, AppError> {
+    let data = Todo::create(pool, new_todo).await
+        .map_err(|_| AppError::UnexpectedError)?;
 
     let res = Json(Response {
         message: "Todo created successfully".to_string(),
@@ -69,16 +65,17 @@ pub async fn todo_update(
     State(pool): State<PgPool>, 
     Path(id): Path<i64>, 
     Json(updated_todo): Json<UpdateTodo>,
-) -> Result<impl IntoResponse, Json<Response>> {
-    let data = Todo::update(pool, id, updated_todo).await.map_err(|_|
-        Json(Response {
-            message: format!("Failed updating todo id: {}", id),
-            content: None,
-        })
-    )?;
+) -> Result<impl IntoResponse, AppError> {
+    let data = match Todo::update(pool, id, updated_todo).await {
+        Ok(res) => res,
+        Err(e) => match e {
+            sqlx::Error::RowNotFound => return Err(AppError::TodoNotFound),
+            _ => return Err(AppError::UnexpectedError),
+        }
+    };
 
     let res = Json(Response {
-        message: "Todo updated successfully".to_string(),
+        message: format!("Todo id: {} updated successfully", id),
         content: Some(vec![data])
     });
 
@@ -88,16 +85,17 @@ pub async fn todo_update(
 pub async fn todo_delete(
     State(pool): State<PgPool>, 
     Path(id): Path<i64>,
-) -> Result<impl IntoResponse, Json<Response>> {
-    let data = Todo::delete(pool, id).await.map_err(|_|
-        Json(Response {
-            message: format!("Failed deleting todo id: {}", id),
-            content: None,
-        })
-    )?;
+) -> Result<impl IntoResponse, AppError> {
+    let data = match Todo::delete(pool, id).await {
+        Ok(res) => res,
+        Err(e) => match e {
+            sqlx::Error::RowNotFound => return Err(AppError::TodoNotFound),
+            _ => return Err(AppError::UnexpectedError),
+        }
+    };
 
     let res = Json(Response {
-        message: "Todo deleted successfully".to_string(),
+        message: format!("Todo id: {} deleted successfully", id),
         content: Some(vec![data])
     });
 

@@ -3,6 +3,7 @@ use axum::{routing::get, serve::Serve, Router};
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 
 pub mod db;
+pub mod error;
 pub mod routes;
 pub mod utils;
 

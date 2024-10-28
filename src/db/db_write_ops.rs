@@ -1,8 +1,7 @@
-use super::db::Todo;
-
-use anyhow::Result;
 use serde::Deserialize;
-use sqlx::PgPool;
+use sqlx::{PgPool, Error};
+
+use super::db::Todo;
 
 #[derive(Deserialize, Clone)]
 pub struct CreateTodo {
@@ -32,7 +31,7 @@ impl UpdateTodo {
 }
 
 impl Todo {
-    pub async fn create(pool: PgPool, new_todo: CreateTodo) -> Result<Todo> {
+    pub async fn create(pool: PgPool, new_todo: CreateTodo) -> Result<Todo, Error> {
         let sql = format!("insert into {} (body) values ($1) returning *", Self::table_name());
         let query = sqlx::query_as::<_, Self>(&sql);
         let data = query
@@ -43,7 +42,7 @@ impl Todo {
         Ok(data)
     }
 
-    pub async fn update(pool: PgPool, id: i64, update_todo: UpdateTodo) -> Result<Todo> {
+    pub async fn update(pool: PgPool, id: i64, update_todo: UpdateTodo) -> Result<Todo, Error> {
         let sql = format!("
             update {} 
             set body = $1, completed = $2, updated_at = now()::timestamp 
@@ -59,7 +58,7 @@ impl Todo {
         Ok(data)
     }
 
-    pub async fn delete(pool: PgPool, id: i64) -> Result<Todo> {
+    pub async fn delete(pool: PgPool, id: i64) -> Result<Todo, Error> {
         let sql = format!("delete from {} where id = $1 returning *", Self::table_name());
         let query = sqlx::query_as::<_, Self>(&sql);
         let data = query
