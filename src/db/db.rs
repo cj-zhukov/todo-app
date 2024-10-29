@@ -5,11 +5,11 @@ use crate::utils::constants::test::TABLE_NAME;
 
 #[derive(Serialize, Deserialize, Debug, Clone, sqlx::FromRow)]
 pub struct Todo {
-    id: i64,
-    body: String,
-    completed: bool,
-    created_at: NaiveDateTime,
-    updated_at: NaiveDateTime,
+    pub id: i64,
+    pub body: String,
+    pub completed: bool,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 impl Todo {

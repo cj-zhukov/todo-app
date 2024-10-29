@@ -39,7 +39,7 @@ pub async fn todo_read(
     };
 
     let res = Json(Response {
-        message: format!("Listing todo is: {}", id),
+        message: format!("Reading todo id: {}", id),
         content: Some(vec![data]),
     });
 
@@ -54,7 +54,7 @@ pub async fn todo_create(
         .map_err(|_| AppError::UnexpectedError)?;
 
     let res = Json(Response {
-        message: "Todo created successfully".to_string(),
+        message: format!("Todo id: {} created successfully", data.id),
         content: Some(vec![data])
     });
 
