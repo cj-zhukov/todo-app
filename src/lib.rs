@@ -21,6 +21,7 @@ impl Application {
 
     pub async fn build(address: &str, db: DB) -> Result<Self, Box<dyn Error>> {        
         let router = Router::new()
+            .route("/", get(|| async { "Todo App" }))
             .route("/foo", get(|| async { "foo" }))
             .route("/alive", get(ping))
             .route("/todos", get(todo_list).post(todo_create))
@@ -37,7 +38,7 @@ impl Application {
     pub async fn run(self) -> Result<(), std::io::Error> {
         println!("listening on {}", &self.address);
         self.server.await?;
-        
+
         Ok(())
     }
 }
