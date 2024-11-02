@@ -1,6 +1,13 @@
-use todo_app::routes::todos::Response;
+// use todo_app::routes::todos::Response;
 
 use crate::helpers::TestApp;
+
+// #[tokio::test]
+// async fn should_return_200_if_valid_input_list_todos() {
+//     let app = TestApp::new().await.unwrap();
+//     let response = app.get_todos().await;
+//     assert_eq!(response.status().as_u16(), 200);
+// }
 
 // #[tokio::test]
 // async fn should_return_422_if_malformed_input() {

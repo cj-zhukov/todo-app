@@ -1,9 +1,9 @@
+use reqwest::Client;
+use std::error::Error;
+
 use todo_app::{
     utils::constants::test, Application, DB
 };
-
-use anyhow::Result;
-use reqwest::Client;
 
 pub struct TestApp {
     pub address: String,
@@ -11,7 +11,7 @@ pub struct TestApp {
 }
 
 impl TestApp {
-    pub async fn new() -> Result<Self> {
+    pub async fn new() -> Result<Self, Box<dyn Error>> {
         let db = DB::build(test::DB_ADDRESS, "postgres", "postgres", "demo", 10).await?;
         db.run_migrations().await?;
         let app = Application::build(test::APP_ADDRESS, db).await?;
@@ -34,14 +34,22 @@ impl TestApp {
             .expect("Failed to execute request")
     }
 
-    pub async fn post_create_todo<Body>(&self, body: &Body) -> reqwest::Response
-    where Body: serde::Serialize,
-    {
+    pub async fn get_todos(&self) -> reqwest::Response {
         self.http_client
-            .post(&format!("{}/signup", &self.address))
-            .json(body)
+            .get(&format!("{}/todos", &self.address))
             .send()
             .await
-            .expect("Failed to execute request.")
+            .expect("Failed to execute request")
     }
+
+    // pub async fn post_create_todo<Body>(&self, body: &Body) -> reqwest::Response
+    // where Body: serde::Serialize,
+    // {
+    //     self.http_client
+    //         .post(&format!("{}/signup", &self.address))
+    //         .json(body)
+    //         .send()
+    //         .await
+    //         .expect("Failed to execute request.")
+    // }
 }

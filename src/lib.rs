@@ -1,4 +1,3 @@
-use anyhow::Result;
 use axum::{routing::get, serve::Serve, Router};
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 
@@ -7,7 +6,9 @@ pub mod error;
 pub mod routes;
 pub mod utils;
 
+use std::error::Error;
 use routes::{alive::ping, todos::*};
+
 pub struct Application {
     server: Serve<Router, Router>,
     pub address: String,
@@ -18,7 +19,7 @@ impl Application {
         Self { server, address }
     }
 
-    pub async fn build(address: &str, db: DB) -> Result<Self> {        
+    pub async fn build(address: &str, db: DB) -> Result<Self, Box<dyn Error>> {        
         let router = Router::new()
             .route("/foo", get(|| async { "foo" }))
             .route("/alive", get(ping))
@@ -33,10 +34,10 @@ impl Application {
         Ok(Application::new(server, address))
     }
 
-    pub async fn run(self) -> Result<()> {
+    pub async fn run(self) -> Result<(), std::io::Error> {
         println!("listening on {}", &self.address);
         self.server.await?;
-
+        
         Ok(())
     }
 }
@@ -51,14 +52,14 @@ impl DB {
         Self { server, address }
     }
 
-    pub async fn run_migrations(&self) -> Result<()> {
+    pub async fn run_migrations(&self) -> Result<(), Box<dyn Error>> {
         sqlx::migrate!().run(&self.server).await?;
         println!("run migrations for server: {}", &self.address);
 
         Ok(())
     }
 
-    pub async fn build(address: &str, user: &str, pwd: &str, db: &str, max_connections: u32) -> Result<Self> {
+    pub async fn build(address: &str, user: &str, pwd: &str, db: &str, max_connections: u32) -> Result<Self, Box<dyn Error>> {
         let url = format!("postgres://{}:{}@{}/{}", user, pwd, address, db);
         let pool = PgPoolOptions::new()
             .max_connections(max_connections)
