@@ -22,7 +22,6 @@ impl Application {
     pub async fn build(address: &str, db: DB) -> Result<Self, Box<dyn Error>> {        
         let router = Router::new()
             .route("/", get(|| async { "Todo App" }))
-            .route("/foo", get(|| async { "foo" }))
             .route("/alive", get(ping))
             .route("/todos", get(todo_list).post(todo_create))
             .route("/todos/:id", get(todo_read).put(todo_update).delete(todo_delete))

@@ -50,12 +50,12 @@ pub async fn todo_create(
     State(pool): State<PgPool>, 
     Json(new_todo): Json<CreateTodo>,
 ) ->  Result<impl IntoResponse, AppError> {
-    let data = Todo::create(pool, new_todo).await
+    Todo::create(pool, new_todo).await
         .map_err(|_| AppError::UnexpectedError)?;
 
     let res = Json(Response {
-        message: format!("Todo id: {} created successfully", data.id),
-        content: Some(vec![data])
+        message: format!("Todo created successfully"),
+        content: None
     });
 
     Ok((StatusCode::CREATED, res))
@@ -66,8 +66,8 @@ pub async fn todo_update(
     Path(id): Path<i64>, 
     Json(updated_todo): Json<UpdateTodo>,
 ) -> Result<impl IntoResponse, AppError> {
-    let data = match Todo::update(pool, id, updated_todo).await {
-        Ok(res) => res,
+    match Todo::update(pool, id, updated_todo).await {
+        Ok(_) => (),
         Err(e) => match e {
             sqlx::Error::RowNotFound => return Err(AppError::TodoNotFound),
             _ => return Err(AppError::UnexpectedError),
@@ -76,7 +76,7 @@ pub async fn todo_update(
 
     let res = Json(Response {
         message: format!("Todo id: {} updated successfully", id),
-        content: Some(vec![data])
+        content: None
     });
 
     Ok((StatusCode::OK, res))
@@ -86,8 +86,8 @@ pub async fn todo_delete(
     State(pool): State<PgPool>, 
     Path(id): Path<i64>,
 ) -> Result<impl IntoResponse, AppError> {
-    let data = match Todo::delete(pool, id).await {
-        Ok(res) => res,
+    match Todo::delete(pool, id).await {
+        Ok(_) => (),
         Err(e) => match e {
             sqlx::Error::RowNotFound => return Err(AppError::TodoNotFound),
             _ => return Err(AppError::UnexpectedError),
@@ -96,7 +96,7 @@ pub async fn todo_delete(
 
     let res = Json(Response {
         message: format!("Todo id: {} deleted successfully", id),
-        content: Some(vec![data])
+        content: None
     });
 
     Ok((StatusCode::OK, res))
