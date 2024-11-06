@@ -43,7 +43,7 @@ impl Application {
 }
 
 pub struct DB {
-    server: Pool<Postgres>,
+    pub server: Pool<Postgres>,
     pub address: String
 }
 

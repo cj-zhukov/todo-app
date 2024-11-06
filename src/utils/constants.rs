@@ -14,6 +14,7 @@ pub mod env {
     pub const DB_NAME_ENV_VAR: &str = "DB_NAME";
     pub const DB_USER_ENV_VAR: &str = "DB_USER";
     pub const PASSWORD_ENV_VAR: &str = "PASSWORD";
+    pub const DATABASE_URL_ENV_VAR: &str = "DATABASE_URL";
 }
 
 pub static DB_NAME_SECRET: LazyLock<String> = LazyLock::new(|| {
@@ -42,6 +43,16 @@ pub static PASSWORD_SECRET: LazyLock<String> = LazyLock::new(|| {
         .expect("PASSWORD_SECRET must be set.");
     if secret.is_empty() {
         panic!("PASSWORD_SECRET must not be empty.");
+    }
+    secret
+});
+
+pub static DATABASE_URL: LazyLock<String> = LazyLock::new(|| {
+    dotenv().ok();
+    let secret = std_env::var(env::DATABASE_URL_ENV_VAR)
+        .expect("DATABASE_URL_ENV_VAR must be set.");
+    if secret.is_empty() {
+        panic!("DATABASE_URL_ENV_VAR must not be empty.");
     }
     secret
 });
