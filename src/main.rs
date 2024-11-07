@@ -1,16 +1,16 @@
 use std::error::Error;
 
 use todo_app::{
-    utils::constants::{test, DB_NAME_SECRET, PASSWORD_SECRET, DB_USER_SECRET}, 
+    utils::constants::{prod, DB_NAME_SECRET, PASSWORD_SECRET, DB_USER_SECRET}, 
     Application, 
     DB 
 };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let db = DB::build(test::DB_ADDRESS, &DB_USER_SECRET, &PASSWORD_SECRET, &DB_NAME_SECRET, 10).await?;
+    let db = DB::build(prod::DB_ADDRESS, &DB_USER_SECRET, &PASSWORD_SECRET, &DB_NAME_SECRET, 10).await?;
     db.run_migrations().await?;
-    let app = Application::build(test::APP_ADDRESS, db).await?;
+    let app = Application::build(prod::APP_ADDRESS, db).await?;
     app.run().await?;   
 
     Ok(())

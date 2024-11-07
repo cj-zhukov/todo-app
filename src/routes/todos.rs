@@ -17,10 +17,15 @@ pub struct Response {
 pub async fn todo_list(State(pool): State<PgPool>) -> Result<impl IntoResponse, AppError> {
     let data = Todo::list(pool).await
         .map_err(|_| AppError::UnexpectedError)?;
+
+    let data = match data.is_empty() {
+        true => None,
+        false => Some(data)
+    };
     
     let res = Json(Response {
         message: "Listing todos".to_string(),
-        content: Some(data),
+        content: data,
     });
 
     Ok((StatusCode::OK, res))
