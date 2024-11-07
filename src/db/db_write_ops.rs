@@ -5,7 +5,13 @@ use super::db::Todo;
 
 #[derive(Deserialize, Clone)]
 pub struct CreateTodo {
-    pub body: String,
+    body: String,
+}
+
+impl AsRef<str> for CreateTodo {
+    fn as_ref(&self) -> &str {
+        &self.body
+    }
 }
 
 impl CreateTodo {
@@ -18,6 +24,12 @@ impl CreateTodo {
 pub struct UpdateTodo {
     body: String,
     completed: bool,
+}
+
+impl AsRef<str> for UpdateTodo {
+    fn as_ref(&self) -> &str {
+        &self.body
+    }
 }
 
 impl UpdateTodo {
