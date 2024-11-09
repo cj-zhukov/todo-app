@@ -35,17 +35,13 @@ pub async fn todo_read(
     State(pool): State<PgPool>, 
     Path(id): Path<i64>,
 ) -> Result<impl IntoResponse, AppError> {
-    let data = match Todo::read(pool, id).await {
-        Ok(res) => res,
-        Err(e) => match e {
-            sqlx::Error::RowNotFound => return Err(AppError::TodoNotFound),
-            _ => return Err(AppError::UnexpectedError),
-        }
-    };
+    let data = Todo::read(pool, id).await
+        .map_err(|_| AppError::UnexpectedError)?
+        .map(|todo| vec![todo]);
 
     let res = Json(Response {
         message: format!("Reading todo id: {}", id),
-        content: Some(vec![data]),
+        content: data,
     });
 
     Ok((StatusCode::OK, res))

@@ -44,7 +44,7 @@ impl UpdateTodo {
 
 impl Todo {
     pub async fn create(pool: PgPool, new_todo: CreateTodo) -> Result<(), Error> {
-        let sql = format!("insert into {} (body) values ($1) returning *", Self::table_name());
+        let sql = format!("insert into {} (body) values ($1)", Self::table_name());
         sqlx::query(&sql)
             .bind(new_todo.body())
             .execute(&pool)

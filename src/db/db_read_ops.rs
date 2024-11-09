@@ -12,14 +12,14 @@ impl Todo {
         Ok(data)
     }
 
-    pub async fn read(pool: PgPool, id: i64) -> Result<Todo, Error> {
+    pub async fn read(pool: PgPool, id: i64) -> Result<Option<Todo>, Error> {
         let sql = format!("select * from {} where id = $1", Self::table_name());
         let query = sqlx::query_as::<_, Self>(&sql);
-        let data = query
+        let res = query
             .bind(id)
-            .fetch_one(&pool)
+            .fetch_optional(&pool)
             .await?;
 
-        Ok(data)
+        Ok(res)
     }
 }
