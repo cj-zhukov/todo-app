@@ -66,6 +66,17 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
+    // pub async fn post_read_id<Body>(&self, id: &Body) -> reqwest::Response
+    // where Body: serde::Serialize,
+    // {
+    //     self.http_client
+    //         .post(&format!("{}/todos:id", &self.address))
+    //         .json(body)
+    //         .send()
+    //         .await
+    //         .expect("Failed to execute request.")
+    // }
+
     pub async fn cleanup(&self) {
         let db = DB::build(test::DB_ADDRESS, &DB_USER_SECRET, &PASSWORD_SECRET, "postgres", 10)
             .await

@@ -4,7 +4,8 @@ use sqlx::PgPool;
 
 use crate::db::{
     db::Todo, 
-    db_write_ops::{CreateTodo, UpdateTodo}
+    db_write_ops::{CreateTodo, UpdateTodo}, 
+    error::TodoStoreError
 };
 use crate::error::AppError;
 
@@ -16,7 +17,7 @@ pub struct Response {
 
 pub async fn todo_list(State(pool): State<PgPool>) -> Result<impl IntoResponse, AppError> {
     let data = Todo::list(pool).await
-        .map_err(|_| AppError::UnexpectedError)?;
+        .map_err(|e| AppError::UnexpectedError(e.into()))?;
 
     let data = match data.is_empty() {
         true => None,
@@ -35,13 +36,19 @@ pub async fn todo_read(
     State(pool): State<PgPool>, 
     Path(id): Path<i64>,
 ) -> Result<impl IntoResponse, AppError> {
-    let data = Todo::read(pool, id).await
-        .map_err(|_| AppError::UnexpectedError)?
-        .map(|todo| vec![todo]);
+    let data = match Todo::read_id(pool, id).await {
+        Ok(todo) => todo,
+        Err(e) => match e {
+            TodoStoreError::TodoNotFound => return Err(AppError::TodoNotFound),
+            TodoStoreError::UnexpectedError(e) => return Err(AppError::UnexpectedError(e.into())),
+            TodoStoreError::TodoAlreadyExists => return Err(AppError::TodoAlreadyExists),
+            TodoStoreError::InvalidCredentials => return Err(AppError::InvalidCredentials),
+        }
+    };
 
     let res = Json(Response {
         message: format!("Reading todo id: {}", id),
-        content: data,
+        content: Some(vec![data]),
     });
 
     Ok((StatusCode::OK, res))
@@ -51,8 +58,12 @@ pub async fn todo_create(
     State(pool): State<PgPool>, 
     Json(new_todo): Json<CreateTodo>,
 ) ->  Result<impl IntoResponse, AppError> {
+    if let Ok(_todo) = Todo::read_body(pool.clone(), new_todo.body()).await {
+        return Err(AppError::TodoAlreadyExists);
+    }
+
     Todo::create(pool, new_todo).await
-        .map_err(|_| AppError::UnexpectedError)?;
+        .map_err(|e| AppError::UnexpectedError(e.into()))?;
 
     let res = Json(Response {
         message: format!("Todo created successfully"),
@@ -67,13 +78,18 @@ pub async fn todo_update(
     Path(id): Path<i64>, 
     Json(updated_todo): Json<UpdateTodo>,
 ) -> Result<impl IntoResponse, AppError> {
-    match Todo::update(pool, id, updated_todo).await {
+    match Todo::read_id(pool.clone(), id).await {
         Ok(_) => (),
         Err(e) => match e {
-            sqlx::Error::RowNotFound => return Err(AppError::TodoNotFound),
-            _ => return Err(AppError::UnexpectedError),
+            TodoStoreError::TodoNotFound => return Err(AppError::TodoNotFound),
+            TodoStoreError::UnexpectedError(e) => return Err(AppError::UnexpectedError(e.into())),
+            TodoStoreError::TodoAlreadyExists => return Err(AppError::TodoAlreadyExists),
+            TodoStoreError::InvalidCredentials => return Err(AppError::InvalidCredentials),
         }
     };
+
+    Todo::update(pool, id, updated_todo).await
+        .map_err(|e| AppError::UnexpectedError(e.into()))?;
 
     let res = Json(Response {
         message: format!("Todo id: {} updated successfully", id),
@@ -87,13 +103,18 @@ pub async fn todo_delete(
     State(pool): State<PgPool>, 
     Path(id): Path<i64>,
 ) -> Result<impl IntoResponse, AppError> {
-    match Todo::delete(pool, id).await {
+    match Todo::read_id(pool.clone(), id).await {
         Ok(_) => (),
         Err(e) => match e {
-            sqlx::Error::RowNotFound => return Err(AppError::TodoNotFound),
-            _ => return Err(AppError::UnexpectedError),
+            TodoStoreError::TodoNotFound => return Err(AppError::TodoNotFound),
+            TodoStoreError::UnexpectedError(e) => return Err(AppError::UnexpectedError(e.into())),
+            TodoStoreError::TodoAlreadyExists => return Err(AppError::TodoAlreadyExists),
+            TodoStoreError::InvalidCredentials => return Err(AppError::InvalidCredentials),
         }
     };
+
+    Todo::delete(pool, id).await
+        .map_err(|e| AppError::UnexpectedError(e.into()))?;
 
     let res = Json(Response {
         message: format!("Todo id: {} deleted successfully", id),
