@@ -45,6 +45,7 @@ impl UpdateTodo {
 }
 
 impl Todo {
+    #[tracing::instrument(name = "Creating todo in PostgreSQL", skip_all)]
     pub async fn create(pool: PgPool, new_todo: CreateTodo) -> Result<(), TodoStoreError> {
         let sql = format!("insert into {} (body) values ($1)", Self::table_name());
         sqlx::query(&sql)
@@ -56,6 +57,7 @@ impl Todo {
         Ok(())
     }
 
+    #[tracing::instrument(name = "Updating todo in PostgreSQL", skip_all)]
     pub async fn update(pool: PgPool, id: i64, update_todo: UpdateTodo) -> Result<(), TodoStoreError> {
         let sql = format!("
             update {} 
@@ -72,6 +74,7 @@ impl Todo {
         Ok(())
     }
 
+    #[tracing::instrument(name = "Deleting todo in PostgreSQL", skip_all)]
     pub async fn delete(pool: PgPool, id: i64) -> Result<(), TodoStoreError> {
         let sql = format!("delete from {} where id = $1", Self::table_name());
         sqlx::query(&sql)

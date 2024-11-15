@@ -15,6 +15,7 @@ pub struct Response {
     pub content: Option<Vec<Todo>>,
 }
 
+#[tracing::instrument(name = "todo_list", skip_all)]
 pub async fn todo_list(State(pool): State<PgPool>) -> Result<impl IntoResponse, AppError> {
     let data = Todo::list(pool).await
         .map_err(|e| AppError::UnexpectedError(e.into()))?;
@@ -32,6 +33,7 @@ pub async fn todo_list(State(pool): State<PgPool>) -> Result<impl IntoResponse, 
     Ok((StatusCode::OK, res))
 }
 
+#[tracing::instrument(name = "todo_read", skip_all)]
 pub async fn todo_read(
     State(pool): State<PgPool>, 
     Path(id): Path<i64>,
@@ -54,6 +56,7 @@ pub async fn todo_read(
     Ok((StatusCode::OK, res))
 }
 
+#[tracing::instrument(name = "todo_create", skip_all)]
 pub async fn todo_create(
     State(pool): State<PgPool>, 
     Json(new_todo): Json<CreateTodo>,
@@ -73,6 +76,7 @@ pub async fn todo_create(
     Ok((StatusCode::CREATED, res))
 }
 
+#[tracing::instrument(name = "todo_update", skip_all)]
 pub async fn todo_update(
     State(pool): State<PgPool>, 
     Path(id): Path<i64>, 
@@ -99,6 +103,7 @@ pub async fn todo_update(
     Ok((StatusCode::OK, res))
 }
 
+#[tracing::instrument(name = "todo_delete", skip_all)]
 pub async fn todo_delete(
     State(pool): State<PgPool>, 
     Path(id): Path<i64>,

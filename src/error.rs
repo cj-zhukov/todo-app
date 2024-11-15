@@ -33,6 +33,8 @@ pub struct ErrorResponse {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
+        log_error_chain(&self);
+        
         let (status, error_message) = match self {
             Self::TodoAlreadyExists => (StatusCode::CONFLICT, "Todo already exists"),
             Self::TodoNotFound => (StatusCode::NOT_FOUND, "Todo not found"),
@@ -49,16 +51,16 @@ impl IntoResponse for AppError {
     }
 }
 
-// fn log_error_chain(e: &(dyn std::error::Error + 'static)) {
-//     let separator =
-//         "\n-----------------------------------------------------------------------------------\n";
-//     let mut report = format!("{}{:?}\n", separator, e);
-//     let mut current = e.source();
-//     while let Some(cause) = current {
-//         let str = format!("Caused by:\n\n{:?}", cause);
-//         report = format!("{}\n{}", report, str);
-//         current = cause.source();
-//     }
-//     report = format!("{}\n{}", report, separator);
-//     tracing::error!("{}", report);
-// }
+fn log_error_chain(e: &(dyn std::error::Error + 'static)) {
+    let separator =
+        "\n-----------------------------------------------------------------------------------\n";
+    let mut report = format!("{}{:?}\n", separator, e);
+    let mut current = e.source();
+    while let Some(cause) = current {
+        let str = format!("Caused by:\n\n{:?}", cause);
+        report = format!("{}\n{}", report, str);
+        current = cause.source();
+    }
+    report = format!("{}\n{}", report, separator);
+    tracing::error!("{}", report);
+}

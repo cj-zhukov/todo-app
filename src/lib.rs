@@ -35,7 +35,7 @@ impl Application {
     }
 
     pub async fn run(self) -> Result<(), std::io::Error> {
-        println!("listening on {}", &self.address);
+        tracing::info!("listening on {}", &self.address);
         self.server.await?;
 
         Ok(())
@@ -54,7 +54,7 @@ impl DB {
 
     pub async fn run_migrations(&self) -> Result<(), Box<dyn Error>> {
         sqlx::migrate!().run(&self.server).await?;
-        println!("run migrations for server: {}", &self.address);
+        tracing::info!("run migrations for server {}", &self.address);
 
         Ok(())
     }
@@ -66,7 +66,7 @@ impl DB {
             .connect(&url)
             .await?;
 
-        println!("established connection to server: {} db: {}", address, db);
+        tracing::info!("established connection to server: {} db: {}", address, db);
 
         Ok(DB::new(pool, address.to_string()))
     }
