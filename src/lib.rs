@@ -1,5 +1,6 @@
 use axum::{routing::get, serve::Serve, Router};
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use tower_http::trace::TraceLayer;
 
 pub mod db;
 pub mod error;
@@ -8,6 +9,7 @@ pub mod utils;
 
 use std::error::Error;
 use routes::{alive::ping, todos::*};
+use utils::tracing::*;
 
 pub struct Application {
     server: Serve<Router, Router>,
@@ -25,7 +27,13 @@ impl Application {
             .route("/alive", get(ping))
             .route("/todos", get(todo_list).post(todo_create))
             .route("/todos/:id", get(todo_read).put(todo_update).delete(todo_delete))
-            .with_state(db.server);
+            .with_state(db.server)
+            .layer(
+                TraceLayer::new_for_http()
+                    .make_span_with(make_span_with_request_id)
+                    .on_request(on_request)
+                    .on_response(on_response),
+            );
 
         let listener = tokio::net::TcpListener::bind(address).await?;
         let address = listener.local_addr()?.to_string();

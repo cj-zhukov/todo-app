@@ -1,4 +1,4 @@
-use color_eyre::eyre::{self, Result};
+use color_eyre::eyre::Result;
 use sqlx::PgPool;
 
 use crate::utils::constants::test::MAX_ROWS;

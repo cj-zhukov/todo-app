@@ -5,7 +5,7 @@ use sqlx::PgPool;
 use super::db::Todo;
 use super::error::TodoStoreError;
 
-#[derive(Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct CreateTodo {
     body: String,
 }
@@ -22,7 +22,7 @@ impl CreateTodo {
     }
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct UpdateTodo {
     body: String,
     completed: bool,
