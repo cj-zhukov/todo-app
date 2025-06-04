@@ -51,8 +51,14 @@ impl Application {
 }
 
 pub struct DB {
-    pub server: Pool<Postgres>,
-    pub address: String
+    server: Pool<Postgres>,
+    address: String
+}
+
+impl AsRef<Pool<Postgres>> for DB {
+    fn as_ref(&self) -> &Pool<Postgres> {
+        &self.server
+    }
 }
 
 impl DB {
@@ -61,9 +67,8 @@ impl DB {
     }
 
     pub async fn run_migrations(&self) -> Result<(), Box<dyn Error>> {
-        sqlx::migrate!().run(&self.server).await?;
+        sqlx::migrate!().run(self.as_ref()).await?;
         tracing::info!("run migrations for server {}", &self.address);
-
         Ok(())
     }
 

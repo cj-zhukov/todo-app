@@ -21,7 +21,7 @@ impl TestApp {
         let db = DB::build(test::DB_ADDRESS, &DB_USER_SECRET, &PASSWORD_SECRET, "postgres", 10).await?;
         let db_name = Uuid::new_v4().to_string();
         db
-            .server
+            .as_ref()
             .execute(format!(r#"CREATE DATABASE "{}";"#, db_name).as_str())
             .await
             .expect("Failed to create database.");
@@ -82,7 +82,8 @@ impl TestApp {
             .await
             .expect("failed creating pool");
         
-        db.server
+        db
+            .as_ref()
             .execute(format!(r#"drop database "{}" with (force);"#, self.db_name).as_str())
             .await
             .expect("failed to drop the database");
