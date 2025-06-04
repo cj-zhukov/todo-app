@@ -7,6 +7,8 @@ use color_eyre::eyre::Report;
 use thiserror::Error;
 use serde::{Deserialize, Serialize};
 
+use crate::db::error::TodoStoreError;
+
 #[derive(Debug, Error)]
 pub enum AppError {
     #[error("Todo already exists")]
@@ -63,4 +65,15 @@ fn log_error_chain(e: &(dyn std::error::Error + 'static)) {
     }
     report = format!("{}\n{}", report, separator);
     tracing::error!("{}", report);
+}
+
+impl From<TodoStoreError> for AppError {
+    fn from(err: TodoStoreError) -> Self {
+        match err {
+            TodoStoreError::TodoNotFound => AppError::TodoNotFound,
+            TodoStoreError::TodoAlreadyExists => AppError::TodoAlreadyExists,
+            TodoStoreError::InvalidCredentials => AppError::InvalidCredentials,
+            TodoStoreError::UnexpectedError(e) => AppError::UnexpectedError(e),
+        }
+    }
 }

@@ -2,7 +2,8 @@ use color_eyre::eyre::Result;
 use serde::Deserialize;
 use sqlx::PgPool;
 
-use super::db::Todo;
+use crate::utils::constants::prod::TABLE_NAME;
+use super::todo::Todo;
 use super::error::TodoStoreError;
 
 #[derive(Debug, Deserialize, Clone)]
@@ -47,7 +48,7 @@ impl UpdateTodo {
 impl Todo {
     #[tracing::instrument(name = "Creating todo in PostgreSQL", skip_all)]
     pub async fn create(pool: PgPool, new_todo: CreateTodo) -> Result<(), TodoStoreError> {
-        let sql = format!("insert into {} (body) values ($1)", Self::table_name());
+        let sql = format!("insert into {TABLE_NAME} (body) values ($1)");
         sqlx::query(&sql)
             .bind(new_todo.body())
             .execute(&pool)
@@ -60,9 +61,9 @@ impl Todo {
     #[tracing::instrument(name = "Updating todo in PostgreSQL", skip_all)]
     pub async fn update(pool: PgPool, id: i64, update_todo: UpdateTodo) -> Result<(), TodoStoreError> {
         let sql = format!("
-            update {} 
+            update {TABLE_NAME} 
             set body = $1, completed = $2, updated_at = now()::timestamp 
-            where id = $3", Self::table_name());
+            where id = $3");
         sqlx::query(&sql)
             .bind(update_todo.body())
             .bind(update_todo.completed())
@@ -76,7 +77,7 @@ impl Todo {
 
     #[tracing::instrument(name = "Deleting todo in PostgreSQL", skip_all)]
     pub async fn delete(pool: PgPool, id: i64) -> Result<(), TodoStoreError> {
-        let sql = format!("delete from {} where id = $1", Self::table_name());
+        let sql = format!("delete from {TABLE_NAME} where id = $1");
         sqlx::query(&sql)
             .bind(id)
             .execute(&pool)
