@@ -1,9 +1,7 @@
 use std::error::Error;
 
 use todo_app::{
-    utils::{constants::{prod, DB_NAME_SECRET, DB_USER_SECRET, PASSWORD_SECRET}, tracing::init_tracing}, 
-    Application, 
-    DB 
+    Application, db::DB, utils::{constants::{DB_NAME_SECRET, DB_USER_SECRET, PASSWORD_SECRET, prod}, tracing::init_tracing} 
 };
 
 #[tokio::main]
@@ -14,6 +12,5 @@ async fn main() -> Result<(), Box<dyn Error>> {
     db.run_migrations().await?;
     let app = Application::build(prod::APP_ADDRESS, db).await?;
     app.run().await?;   
-
     Ok(())
 }

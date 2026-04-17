@@ -5,9 +5,7 @@ use sqlx::Executor;
 use uuid::Uuid;
 
 use todo_app::{
-    utils::constants::{test, DB_USER_SECRET, PASSWORD_SECRET}, 
-    Application, 
-    DB
+    Application, db::DB, utils::constants::{DB_USER_SECRET, PASSWORD_SECRET, test} 
 };
 
 pub struct TestApp {
@@ -66,16 +64,15 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
-    // pub async fn post_read_id<Body>(&self, id: &Body) -> reqwest::Response
-    // where Body: serde::Serialize,
-    // {
-    //     self.http_client
-    //         .post(&format!("{}/todos:id", &self.address))
-    //         .json(body)
-    //         .send()
-    //         .await
-    //         .expect("Failed to execute request.")
-    // }
+    pub async fn post_read_id(&self, id: i64) -> reqwest::Response
+    {
+        self.http_client
+            .post(&format!("{}/todos:id", &self.address))
+            .json(&id)
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
 
     pub async fn cleanup(&self) {
         let db = DB::build(test::DB_ADDRESS, &DB_USER_SECRET, &PASSWORD_SECRET, "postgres", 10)
