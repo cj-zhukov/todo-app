@@ -56,21 +56,16 @@ async fn should_return_201_if_valid_input() {
     app.cleanup().await;
 }
 
-// #[tokio::test]
-// async fn should_return_404_if_todo_not_exists() {
-//     let app = TestApp::new().await.unwrap();
+#[tokio::test]
+async fn should_return_404_if_todo_not_exists() {
+    let app = TestApp::new().await.unwrap();
+    
+    // there's no todo with 666 id
+    let response = app.post_read_id(666).await;
+    assert_eq!(response.status().as_u16(), 404);
 
-//     let response = app.post(&create_todo).await;
-//     assert_eq!(response.status().as_u16(), 409);
-
-//     let response = response
-//         .json::<Response>()
-//         .await
-//         .expect("Could not deserialize response body to Response");
-//     assert_eq!(response.message, "Todo already exists");
-
-//     app.cleanup().await;
-// }
+    app.cleanup().await;
+}
 
 #[tokio::test]
 async fn should_return_409_if_todo_exists() {
