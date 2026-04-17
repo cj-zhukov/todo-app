@@ -4,7 +4,6 @@ use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
 pub mod error;
 pub mod postgres_repo;
-pub mod todo;
 
 pub struct DB {
     server: Pool<Postgres>,

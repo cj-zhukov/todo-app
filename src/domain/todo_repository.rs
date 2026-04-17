@@ -1,10 +1,7 @@
 use async_trait::async_trait;
 use serde::Deserialize;
 
-use crate::db::{
-    todo::Todo,
-    error::TodoStoreError,
-};
+use crate::{db::error::TodoStoreError, domain::todo::Todo};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct CreateTodo {

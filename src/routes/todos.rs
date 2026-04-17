@@ -1,7 +1,7 @@
 use axum::{extract::{Path, State}, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 
-use crate::{AppState, db::todo::Todo, domain::todo_repository::{CreateTodo, UpdateTodo}, utils::helpers::json_response};
+use crate::{AppState, domain::{todo::Todo, todo_repository::{CreateTodo, UpdateTodo}}, utils::helpers::json_response};
 use crate::error::AppError;
 
 #[derive(Debug, Serialize, Deserialize)]
