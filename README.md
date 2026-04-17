@@ -1,5 +1,5 @@
 # todo-app
-todo-api is a Rust library that stores todo in postgres database with axum and sqlx.
+A Rust library that stores todo in postgres database with axum and sqlx.
 
 ## Usage
 Postgres table todos will be created automatically because migrations are added. 
