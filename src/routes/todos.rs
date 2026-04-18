@@ -31,9 +31,6 @@ pub async fn todo_create(
     State(state): State<AppState>, 
     Json(new_todo): Json<CreateTodo>,
 ) ->  Result<impl IntoResponse, AppError> {
-    if let Ok(_todo) = state.repo.read_body(new_todo.body()).await {
-        return Err(AppError::TodoAlreadyExists);
-    }
     state.repo.create(new_todo).await?;
     Ok(json_response("Todo created successfully", None, StatusCode::CREATED))
 }

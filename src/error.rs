@@ -4,29 +4,19 @@ use axum::{
     Json,
 };
 use color_eyre::eyre::Report;
-use thiserror::Error;
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
-use crate::db::error::TodoStoreError;
+use crate::domain::error::DomainError;
 
 #[derive(Debug, Error)]
 pub enum AppError {
-    #[error("Todo already exists")]
-    TodoAlreadyExists,
+    #[error("Domain error")]
+    Domain(#[from] DomainError),
 
-    #[error("Todo not found")]
-    TodoNotFound,
-
-    #[error("Invalid credentials")]
-    InvalidCredentials,
-
-    #[error("Incorrect credentials")]
-    IncorrectCredentials,
-    
     #[error("Unexpected error")]
     UnexpectedError(#[source] Report),
 }
-
 
 #[derive(Serialize, Deserialize)]
 pub struct ErrorResponse {
@@ -36,19 +26,26 @@ pub struct ErrorResponse {
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         log_error_chain(&self);
-        
-        let (status, error_message) = match self {
-            Self::TodoAlreadyExists => (StatusCode::CONFLICT, "Todo already exists"),
-            Self::TodoNotFound => (StatusCode::NOT_FOUND, "Todo not found"),
-            Self::InvalidCredentials => (StatusCode::BAD_REQUEST, "Invalid credentials"),
-            Self::IncorrectCredentials => (StatusCode::UNAUTHORIZED, "Incorrect credentials"),
-            Self::UnexpectedError(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Unexpected error"),
+
+        let (status, message) = match self {
+            AppError::Domain(e) => match e {
+                DomainError::TodoAlreadyExists => (StatusCode::CONFLICT, e.to_string()),
+                DomainError::TodoNotFound => (StatusCode::NOT_FOUND, e.to_string()),
+                DomainError::InvalidCredentials => (StatusCode::BAD_REQUEST, e.to_string()),
+                DomainError::UnexpectedError(_) => {
+                    (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+                }
+            },
+            AppError::UnexpectedError(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Unexpected error".to_string(),
+            ),
         };
-        
+
         let body = Json(ErrorResponse {
-            error: error_message.to_string(),
+            error: message.to_string(),
         });
-        
+
         (status, body).into_response()
     }
 }
@@ -65,15 +62,4 @@ fn log_error_chain(e: &(dyn std::error::Error + 'static)) {
     }
     report = format!("{}\n{}", report, separator);
     tracing::error!("{}", report);
-}
-
-impl From<TodoStoreError> for AppError {
-    fn from(err: TodoStoreError) -> Self {
-        match err {
-            TodoStoreError::TodoNotFound => AppError::TodoNotFound,
-            TodoStoreError::TodoAlreadyExists => AppError::TodoAlreadyExists,
-            TodoStoreError::InvalidCredentials => AppError::InvalidCredentials,
-            TodoStoreError::UnexpectedError(e) => AppError::UnexpectedError(e),
-        }
-    }
 }
