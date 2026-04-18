@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use serde::Deserialize;
 
-use crate::{db::error::TodoStoreError, domain::todo::Todo};
+use crate::{domain::{error::DomainError, todo::Todo}};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct CreateTodo {
@@ -44,15 +44,15 @@ impl UpdateTodo {
 
 #[async_trait]
 pub trait TodoRepository: Send + Sync {
-    async fn list(&self) -> Result<Vec<Todo>, TodoStoreError>;
+    async fn list(&self) -> Result<Vec<Todo>, DomainError>;
 
-    async fn read_id(&self, id: i64) -> Result<Todo, TodoStoreError>;
+    async fn read_id(&self, id: i64) -> Result<Todo, DomainError>;
 
-    async fn read_body(&self, body: &str) -> Result<Todo, TodoStoreError>;
+    async fn read_body(&self, body: &str) -> Result<Todo, DomainError>;
 
-    async fn create(&self, todo: CreateTodo) -> Result<(), TodoStoreError>;
+    async fn create(&self, todo: CreateTodo) -> Result<(), DomainError>;
 
-    async fn update(&self, id: i64, todo: UpdateTodo) -> Result<(), TodoStoreError>;
+    async fn update(&self, id: i64, todo: UpdateTodo) -> Result<(), DomainError>;
 
-    async fn delete(&self, id: i64) -> Result<(), TodoStoreError>;
+    async fn delete(&self, id: i64) -> Result<(), DomainError>;
 }
