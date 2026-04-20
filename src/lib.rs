@@ -4,6 +4,7 @@ use tower_http::trace::TraceLayer;
 pub mod db;
 pub mod error;
 pub mod domain;
+pub mod hm;
 pub mod routes;
 pub mod utils;
 
@@ -11,7 +12,7 @@ use std::{error::Error, sync::Arc};
 use routes::{alive::ping, todos::*};
 use utils::tracing::*;
 
-use crate::{db::{DB, postgres_repo::PgTodoRepository}, domain::todo_repository::TodoRepository};
+use crate::domain::todo_repository::TodoRepository;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -28,11 +29,8 @@ impl Application {
         Self { server, address }
     }
 
-    pub async fn build(address: &str, db: DB) -> Result<Self, Box<dyn Error>> {        
-        let repo = PgTodoRepository::new(db.as_ref().clone());
-        let state = AppState {
-            repo: Arc::new(repo),
-        };
+    pub async fn build(address: &str, repo: Arc<dyn TodoRepository>) -> Result<Self, Box<dyn Error>> {        
+        let state = AppState { repo };
         let router = Router::new()
             .route("/", get(|| async { "Todo App" }))
             .route("/alive", get(ping))

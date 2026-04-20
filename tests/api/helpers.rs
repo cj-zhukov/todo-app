@@ -1,11 +1,11 @@
-use std::error::Error;
+use std::{error::Error, sync::Arc};
 
 use reqwest::Client;
 use sqlx::Executor;
 use uuid::Uuid;
 
 use todo_app::{
-    Application, db::DB, utils::constants::{DB_USER_SECRET, PASSWORD_SECRET, test} 
+    Application, db::{DB, postgres_repo::PgTodoRepository}, domain::todo_repository::TodoRepository, hm::hashmap_repo::HmTodoRepository, utils::constants::{DB_USER_SECRET, PASSWORD_SECRET, test} 
 };
 
 pub struct TestApp {
@@ -15,7 +15,7 @@ pub struct TestApp {
 }
 
 impl TestApp {
-    pub async fn new() -> Result<Self, Box<dyn Error>> {
+    pub async fn new_postgres() -> Result<Self, Box<dyn Error>> {
         let db = DB::build(test::DB_ADDRESS, &DB_USER_SECRET, &PASSWORD_SECRET, "postgres", 10).await?;
         let db_name = Uuid::new_v4().to_string();
         db
@@ -26,15 +26,29 @@ impl TestApp {
 
         let db = DB::build(test::DB_ADDRESS, &DB_USER_SECRET, &PASSWORD_SECRET, &db_name, 10).await?;
         db.run_migrations().await?;
-        let app = Application::build(test::APP_ADDRESS, db).await?;
+        let repo = Arc::new(PgTodoRepository::new(db.as_ref().clone()));
+        Self::spawn_app(repo, Some(db_name)).await
+    }
+
+    pub async fn new_hashmap() -> Result<Self, Box<dyn Error>> {
+        let repo = Arc::new(HmTodoRepository::new());
+        Self::spawn_app(repo, None).await
+    }
+
+    async fn spawn_app(
+        repo: Arc<dyn TodoRepository>,
+        db_name: Option<String>,
+    ) -> Result<Self, Box<dyn Error>> {
+        let app = Application::build(test::APP_ADDRESS, repo).await?;
         let address = format!("http://{}", app.address.clone());
 
-        #[allow(clippy::let_underscore_future)]
         let _ = tokio::spawn(app.run());
 
-        let http_client = Client::new();
-
-        Ok(Self { address, http_client, db_name })
+        Ok(Self {
+            address,
+            http_client: Client::new(),
+            db_name: db_name.unwrap_or_default(),
+        })
     }
 
     pub async fn get_alive(&self) -> reqwest::Response {
