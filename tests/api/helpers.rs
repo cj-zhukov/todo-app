@@ -5,7 +5,7 @@ use sqlx::Executor;
 use uuid::Uuid;
 
 use todo_app::{
-    Application, db::{DB, postgres_repo::PgTodoRepository}, domain::todo_repository::TodoRepository, hm::hashmap_repo::HmTodoRepository, utils::constants::{DB_USER_SECRET, PASSWORD_SECRET, test} 
+    Application, domain::todo_repository::TodoRepository, infrastructure::{hashmap::hashmap_repo::HmTodoRepository, postgres::{DB, postgres_repo::PgTodoRepository}}, utils::constants::{DB_USER_SECRET, PASSWORD_SECRET, test} 
 };
 
 pub struct TestApp {

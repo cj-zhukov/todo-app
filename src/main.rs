@@ -2,8 +2,10 @@ use std::{error::Error, sync::Arc};
 
 use todo_app::{
     Application,
-    db::{DB, postgres_repo::PgTodoRepository},
-    hm::hashmap_repo::HmTodoRepository,
+    infrastructure::{
+        hashmap::hashmap_repo::HmTodoRepository,
+        postgres::{DB, postgres_repo::PgTodoRepository}
+    },
     utils::{constants::{DB_NAME_SECRET, DB_USER_SECRET, PASSWORD_SECRET, prod},
     tracing::init_tracing} 
 };

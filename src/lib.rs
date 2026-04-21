@@ -1,18 +1,17 @@
 use axum::{routing::get, serve::Serve, Router};
 use tower_http::trace::TraceLayer;
 
-pub mod db;
+pub mod infrastructure;
 pub mod error;
 pub mod domain;
-pub mod hm;
 pub mod routes;
 pub mod utils;
 
 use std::{error::Error, sync::Arc};
+
 use routes::{alive::ping, todos::*};
 use utils::tracing::*;
-
-use crate::domain::todo_repository::TodoRepository;
+use domain::todo_repository::TodoRepository;
 
 #[derive(Clone)]
 pub struct AppState {
