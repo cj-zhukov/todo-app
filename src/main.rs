@@ -14,6 +14,7 @@ use todo_app::{
 async fn main() -> Result<(), Box<dyn Error>> {
     color_eyre::install().expect("Failed to install color_eyre");
     init_tracing("todo.log").expect("Failed to initialize tracing");
+    tracing::info!("Tracing initialized");
 
     // run with postgres
     let db = DB::build(prod::DB_ADDRESS, &DB_USER_SECRET, &PASSWORD_SECRET, &DB_NAME_SECRET, 10).await?;
