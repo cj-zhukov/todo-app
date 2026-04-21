@@ -1,30 +1,33 @@
-use std::path::Path;
+use std::fs::OpenOptions;
 use std::sync::Arc;
-use std::fs::File;
 use std::time::Duration;
 
 use axum::{body::Body, extract::Request, response::Response};
 use color_eyre::eyre::Result;
 use tracing::{Level, Span};
 use tracing_error::ErrorLayer;
+use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::fmt::writer::BoxMakeWriter;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::{fmt, EnvFilter};
 
 pub fn init_tracing(file_path: &str) -> Result<()> {
-    let log_file = match Path::new(file_path).exists() {
-        true => File::open(file_path)?,
-        false => File::create(file_path)?
-    };
+    let log_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(file_path)?;
+
     let file_writer = Arc::new(log_file);
     let make_writer = BoxMakeWriter::new(file_writer);
 
     let file_layer = fmt::Layer::default()
         .with_writer(make_writer) // Send logs to the file
-        .with_target(false); // Optional: disable logging module paths
+        .with_ansi(false)
+        .with_target(true) // helps see module paths
+        .with_span_events(FmtSpan::CLOSE) // logs span lifecycle
+        .with_thread_ids(true); // optional, useful
 
-    let filter_layer = EnvFilter::try_from_default_env()
-        .or_else(|_| EnvFilter::try_new("info"))?;
+    let filter_layer = EnvFilter::try_from_default_env().or_else(|_| EnvFilter::try_new("info"))?;
 
     tracing_subscriber::registry()
         .with(filter_layer) // Add the filter layer to control log verbosity
