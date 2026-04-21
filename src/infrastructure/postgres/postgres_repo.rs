@@ -62,7 +62,7 @@ impl TodoRepository for PgTodoRepository {
             .await
             .map_err(|e| DomainError::UnexpectedError(e.into()))?
             .map(Todo::from) 
-            .ok_or(DomainError::TodoNotFound.into())
+            .ok_or(DomainError::TodoNotFound)
     }
 
     #[tracing::instrument(name = "Reading todo by body from PostgreSQL", skip_all)]
@@ -75,14 +75,14 @@ impl TodoRepository for PgTodoRepository {
             .await
             .map_err(|e| DomainError::UnexpectedError(e.into()))?
             .map(Todo::from) 
-            .ok_or(DomainError::TodoNotFound.into())
+            .ok_or(DomainError::TodoNotFound)
     }
 
     #[tracing::instrument(name = "Creating todo in PostgreSQL", skip_all)]
     async fn create(&self, todo: CreateTodo) -> Result<(), DomainError> {
         let sql = format!("insert into {TABLE_NAME} (body) values ($1)");
         if self.read_body(todo.body()).await.is_ok() {
-            return Err(DomainError::TodoAlreadyExists.into());
+            return Err(DomainError::TodoAlreadyExists);
         }
         sqlx::query(&sql)
             .bind(todo.body())
