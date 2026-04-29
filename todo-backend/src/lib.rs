@@ -30,14 +30,14 @@ impl Application {
 
     pub async fn build(address: &str, repo: Arc<dyn TodoRepository>) -> Result<Self, Box<dyn Error>> {        
         let state = AppState { repo };
-        // let cors = CorsLayer::new()
-        //     .allow_origin("http://localhost:3000".parse::<HeaderValue>()?)
-        //     .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
-        //     .allow_headers(Any);
+        let allowed_origins = [
+            "http://localhost:3000".parse()?,
+            "http://127.0.0.1:3000".parse()?,
+        ];
         let cors = CorsLayer::new()
-            .allow_origin(Any)
-            .allow_methods(Any)
-            .allow_headers(Any);
+            .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+            .allow_credentials(true)
+            .allow_origin(allowed_origins);
         let router = Router::new()
             .route("/", get(|| async { "Todo App" }))
             .route("/alive", get(ping))
