@@ -34,10 +34,10 @@ pub fn OperationPanel(
                 style="font-size: 1rem; padding: 0.5rem;"
                 on:change=move |ev| {
                     let selected = event_target_value(&ev);
-                    if selected == "list" {
-                        set_mode.set(Mode::ListTodo);
-                    } else {
-                        unreachable!()
+                    match selected.as_str() {
+                        "list" => set_mode.set(Mode::ListTodo),
+                        "add" => set_mode.set(Mode::AddTodo),
+                        _ => unreachable!()
                     }
                 }
             >
