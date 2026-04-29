@@ -2,29 +2,35 @@ use gloo_net::http::Request;
 use leptos::logging::log;
 use leptos::prelude::*;
 use leptos::reactive::spawn_local;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::components::*;
 use crate::utils::constraints::*;
 
 #[derive(Debug, Deserialize)]
-struct ApiTodoListResponse {
+struct ApiTodoResponse {
     pub message: String,
     pub content: Value,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct ApiTodoCreateRequest {
+    pub body: String,
 }
 
 #[component]
 pub fn App() -> impl IntoView {
     let (is_loading, set_is_loading) = signal(false); // spinner
     let (error, set_error) = signal(None::<String>); // error msg
-    let (result, set_result) = signal(None::<Value>); // list todos
+    let (result, set_result) = signal(None::<Value>); // todos response
     let (todo, set_todo) = signal("Todo body".to_string()); // add todo form
     let (mode, set_mode) = signal(Mode::ListTodo); // mode
 
     let send_request = move |_| {
         spawn_local(async move {
             let current_mode = mode.get_untracked();
+            let current_todo = todo.get_untracked();
             let endpoint = format!("{URL}todos");
             set_is_loading.set(true);
             set_error.set(None);
@@ -34,23 +40,52 @@ pub fn App() -> impl IntoView {
                 current_mode.as_ref()
             );
 
-            let response = match Request::get(&endpoint).build()
-            {
-                Ok(req) => match req.send().await {
-                    Ok(req) => req,
+            let response = match current_mode {
+                Mode::ListTodo => match Request::get(&endpoint).build() {
+                    Ok(req) => match req.send().await {
+                        Ok(res) => res,
+                        Err(e) => {
+                            set_result.set(None);
+                            set_error.set(Some(format!("Network error: {e}")));
+                            set_is_loading.set(false);
+                            return;
+                        }
+                    },
                     Err(e) => {
                         set_result.set(None);
-                        set_error.set(Some(format!("Network error: {e}")));
+                        set_error.set(Some(format!("Failed to build request: {e}")));
                         set_is_loading.set(false);
                         return;
                     }
-                },
-                Err(e) => {
-                    set_result.set(None);
-                    set_error.set(Some(format!("Failed to build request: {e}")));
-                    set_is_loading.set(false);
-                    return;
                 }
+                Mode::AddTodo => {
+                    let payload = ApiTodoCreateRequest {
+                        body: current_todo,
+                    };
+                    match Request::post(&endpoint)
+                        .header("Content-Type", "application/json")
+                        .json(&payload)
+                    {    
+                        Ok(req) => match req.send().await {
+                            Ok(res) => res,
+                            Err(e) => {
+                                set_result.set(None);
+                                set_error.set(Some(format!("Network error: {e}")));
+                                set_is_loading.set(false);
+                                return;
+                            }
+                        },
+                        Err(e) => {
+                            set_result.set(None);
+                            set_error.set(Some(format!("Failed to build request: {e}")));
+                            set_is_loading.set(false);
+                            return;
+                        }
+                    
+                    }
+                }
+                Mode::GetTodoById => todo!(),
+                Mode::UpdateTodo => todo!(),
             };
 
             if !response.ok() {
@@ -66,10 +101,11 @@ pub fn App() -> impl IntoView {
                 return;
             }
             
-            log!("Recieved response: {:?}", response);
-
-            match response.json::<ApiTodoListResponse>().await {
-                    Ok(resp) => set_result.set(Some(resp.content)),
+            match response.json::<ApiTodoResponse>().await {
+                    Ok(resp) => {
+                        log!("Recieved response msg: {}, content: {}", resp.message, resp.content);
+                        set_result.set(Some(resp.content))
+                    }
                     Err(e) => {
                         set_result.set(None);
                         set_error.set(Some(format!("Failed to parse response: {e}")));
@@ -98,7 +134,7 @@ pub fn App() -> impl IntoView {
                 set_mode=set_mode
                 send_request=send_request
                 is_loading=is_loading
-                modes=vec![Mode::ListTodo]
+                modes=vec![Mode::ListTodo, Mode::AddTodo]
             />
 
             // List todo result

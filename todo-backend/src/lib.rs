@@ -1,5 +1,5 @@
-use axum::{Router, http::{HeaderValue, Method}, routing::get, serve::Serve};
-use tower_http::{cors::{Any, CorsLayer}, trace::TraceLayer};
+use axum::{Router, http::{Method, header::{AUTHORIZATION, CONTENT_TYPE}}, routing::get, serve::Serve};
+use tower_http::{cors::{CorsLayer}, trace::TraceLayer};
 
 pub mod infrastructure;
 pub mod error;
@@ -37,6 +37,7 @@ impl Application {
         let cors = CorsLayer::new()
             .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
             .allow_credentials(true)
+            .allow_headers([CONTENT_TYPE, AUTHORIZATION])
             .allow_origin(allowed_origins);
         let router = Router::new()
             .route("/", get(|| async { "Todo App" }))
