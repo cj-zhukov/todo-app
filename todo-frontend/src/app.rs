@@ -146,6 +146,3 @@ pub fn App() -> impl IntoView {
     }
 }
 
-pub fn it_works() -> impl IntoView {
-    view! { <p>"Here’s some text"</p> }
-}
