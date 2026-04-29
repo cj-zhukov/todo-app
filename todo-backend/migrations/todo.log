@@ -1,0 +1,3 @@
+2026-04-21T05:54:57.720662Z  INFO ThreadId(01) todo_app: Tracing initialized
+2026-04-21T05:54:57.757875Z  INFO ThreadId(01) todo_app::infrastructure::postgres: established connection to server: 127.0.0.1:5432 db: demo
+2026-04-21T05:54:57.759223Z  INFO ThreadId(01) sqlx::postgres::notice: relation "_sqlx_migrations" already exists, skipping
