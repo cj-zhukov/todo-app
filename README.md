@@ -1,5 +1,5 @@
 # todo-app
-A Rust library that stores todo in postgres database with axum and sqlx.
+A Rust library that stores todo in postgres database with axum, sqlx and leptos.
 
 ## Usage
 Postgres table todos will be created automatically because migrations are added. 
@@ -32,4 +32,10 @@ curl --request PUT --url "http://localhost:8080/todos/1" --header 'Content-Type:
 delete created todo by id:
 ```bash
 curl --request DELETE --url "http://localhost:8080/todos/1"
+```
+
+## Build
+build frontend with trunk:
+```bash
+trunk serve --port 3000 --open
 ```
