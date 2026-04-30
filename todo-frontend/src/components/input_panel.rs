@@ -2,17 +2,6 @@ use leptos::prelude::*;
 
 use crate::components::Mode;
 
-// #[component]
-// pub fn InputPanel(todo: ReadSignal<String>, set_todo: WriteSignal<String>) -> impl IntoView {
-//     view! {
-//         <textarea
-//             style="width: 800px; height: 150px; font-size: 1rem;"
-//             on:input=move |ev| set_todo.set(event_target_value(&ev))
-//         >
-//             { move || todo.get() }
-//         </textarea>
-//     }
-// }
 #[component]
 pub fn InputPanel(
     mode: ReadSignal<Mode>,
