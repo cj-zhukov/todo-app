@@ -26,7 +26,7 @@ pub fn App() -> impl IntoView {
     let (result, set_result) = signal(None::<Value>); // todos response
     let (todo, set_todo) = signal("Todo body".to_string()); // add todo form
     let (mode, set_mode) = signal(Mode::ListTodo); // mode
-    let (todo_id, set_todo_id) = signal(String::new());
+    let (todo_id, set_todo_id) = signal(String::new()); // todo id
 
     let send_request = move |_| {
         spawn_local(async move {
@@ -41,92 +41,29 @@ pub fn App() -> impl IntoView {
                 endpoint,
                 current_mode.as_ref()
             );
+            
+            let request = match build_request(
+                current_mode,
+                &endpoint,
+                current_todo,
+                current_id,
+            ) {
+                Ok(req) => req,
+                Err(e) => {
+                    set_error.set(Some(e));
+                    set_is_loading.set(false);
+                    return;
+                }
+            };
 
-            let response = match current_mode {
-                Mode::ListTodo => match Request::get(&endpoint).build() {
-                    Ok(req) => match req.send().await {
-                        Ok(res) => res,
-                        Err(e) => {
-                            set_result.set(None);
-                            set_error.set(Some(format!("Network error: {e}")));
-                            set_is_loading.set(false);
-                            return;
-                        }
-                    },
-                    Err(e) => {
-                        set_result.set(None);
-                        set_error.set(Some(format!("Failed to build request: {e}")));
-                        set_is_loading.set(false);
-                        return;
-                    }
+            let response = match send(request).await {
+                Ok(res) => res,
+                Err(e) => {
+                    set_error.set(Some(e));
+                    set_result.set(None);
+                    set_is_loading.set(false);
+                    return;
                 }
-                Mode::AddTodo => {
-                    let payload = ApiTodoCreateRequest {
-                        body: current_todo,
-                    };
-                    match Request::post(&endpoint)
-                        .header("Content-Type", "application/json")
-                        .json(&payload)
-                    {    
-                        Ok(req) => match req.send().await {
-                            Ok(res) => res,
-                            Err(e) => {
-                                set_result.set(None);
-                                set_error.set(Some(format!("Network error: {e}")));
-                                set_is_loading.set(false);
-                                return;
-                            }
-                        },
-                        Err(e) => {
-                            set_result.set(None);
-                            set_error.set(Some(format!("Failed to build request: {e}")));
-                            set_is_loading.set(false);
-                            return;
-                        }
-                    
-                    }
-                }
-                Mode::GetTodo => {
-                    let current_id = match current_id.parse::<i64>() {
-                        Ok(id) => id,
-                        Err(_) => {
-                            set_error.set(Some("Invalid ID".to_string()));
-                            set_is_loading.set(false);
-                            return;
-                        }
-                    };
-                    let url = format!("{}/{}", endpoint, current_id);
-                    match Request::get(&url).send().await {
-                        Ok(res) => res,
-                        Err(e) => {
-                            set_result.set(None);
-                            set_error.set(Some(format!("Network error: {e}")));
-                            set_is_loading.set(false);
-                            return;
-                        }
-                    }                    
-                }
-                Mode::DeleteTodo => {
-                    let current_id = match current_id.parse::<i64>() {
-                        Ok(id) => id,
-                        Err(_) => {
-                            set_error.set(Some("Invalid ID".to_string()));
-                            set_is_loading.set(false);
-                            return;
-                        }
-                    };
-                    let url = format!("{}/{}", endpoint, current_id);
-                    match Request::delete(&url).send().await {
-                        Ok(res) => res,
-                        Err(e) => {
-                            set_result.set(None);
-                            set_error.set(Some(format!("Network error: {e}")));
-                            set_is_loading.set(false);
-                            return;
-                        }
-                    }                           
-                }
-                _ => todo!()
             };
 
             if !response.ok() {
@@ -193,3 +130,52 @@ pub fn App() -> impl IntoView {
     }
 }
 
+fn build_request(
+    mode: Mode,
+    endpoint: &str,
+    todo: String,
+    id: String,
+) -> Result<Request, String> {
+    match mode {
+        Mode::ListTodo => {
+            Request::get(endpoint)
+                .build()
+                .map_err(|e| e.to_string())
+        }
+
+        Mode::AddTodo => {
+            let payload = ApiTodoCreateRequest { body: todo };
+
+            Request::post(endpoint)
+                .header("Content-Type", "application/json")
+                .json(&payload)
+                .map_err(|e| e.to_string())
+        }
+
+        Mode::GetTodo => {
+            let id = id.parse::<i64>().map_err(|_| "Invalid ID")?;
+            let url = format!("{}/{}", endpoint, id);
+
+            Request::get(&url)
+                .build()
+                .map_err(|e| e.to_string())
+        }
+
+        Mode::DeleteTodo => {
+            let id = id.parse::<i64>().map_err(|_| "Invalid ID")?;
+            let url = format!("{}/{}", endpoint, id);
+
+            Request::delete(&url)
+                .build()
+                .map_err(|e| e.to_string())
+        }
+
+        _ => unreachable!()
+    }
+}
+
+async fn send(req: Request) -> Result<gloo_net::http::Response, String> {
+    req.send()
+        .await
+        .map_err(|e| format!("Network error: {e}"))
+}
