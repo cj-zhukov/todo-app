@@ -31,6 +31,16 @@ pub fn InputPanel(
                     prop:value=move || todo_id.get()
                 />
             </Show>
+
+            // Delete todo by ID input
+            <Show when=move || mode.get() == Mode::DeleteTodo>
+                <input
+                    type="text"
+                    placeholder="Enter todo ID"
+                    on:input=move |ev| set_todo_id.set(event_target_value(&ev))
+                    prop:value=move || todo_id.get()
+                />
+            </Show>
         </>
     }
 }
