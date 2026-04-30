@@ -105,8 +105,28 @@ pub fn App() -> impl IntoView {
                             return;
                         }
                     }                    
-                },
-                Mode::UpdateTodo => todo!(),
+                }
+                Mode::DeleteTodo => {
+                    let current_id = match current_id.parse::<i64>() {
+                        Ok(id) => id,
+                        Err(_) => {
+                            set_error.set(Some("Invalid ID".to_string()));
+                            set_is_loading.set(false);
+                            return;
+                        }
+                    };
+                    let url = format!("{}/{}", endpoint, current_id);
+                    match Request::delete(&url).send().await {
+                        Ok(res) => res,
+                        Err(e) => {
+                            set_result.set(None);
+                            set_error.set(Some(format!("Network error: {e}")));
+                            set_is_loading.set(false);
+                            return;
+                        }
+                    }                           
+                }
+                _ => todo!()
             };
 
             if !response.ok() {
@@ -161,11 +181,11 @@ pub fn App() -> impl IntoView {
                 set_mode=set_mode
                 send_request=send_request
                 is_loading=is_loading
-                modes=vec![Mode::ListTodo, Mode::AddTodo, Mode::GetTodo]
+                modes=vec![Mode::ListTodo, Mode::AddTodo, Mode::GetTodo, Mode::DeleteTodo]
             />
 
             // todos response result
-            <Show when=move || mode.get() == Mode::ListTodo || mode.get() == Mode::GetTodo>
+            <Show when=move || mode.get() == Mode::ListTodo || mode.get() == Mode::GetTodo || mode.get() == Mode::DeleteTodo>
                 <ListTodoResult result=result />
             </Show>
 
