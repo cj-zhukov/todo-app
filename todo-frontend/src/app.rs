@@ -26,11 +26,13 @@ pub fn App() -> impl IntoView {
     let (result, set_result) = signal(None::<Value>); // todos response
     let (todo, set_todo) = signal("Todo body".to_string()); // add todo form
     let (mode, set_mode) = signal(Mode::ListTodo); // mode
+    let (todo_id, set_todo_id) = signal(String::new());
 
     let send_request = move |_| {
         spawn_local(async move {
             let current_mode = mode.get_untracked();
             let current_todo = todo.get_untracked();
+            let current_id = todo_id.get_untracked();
             let endpoint = format!("{URL}todos");
             set_is_loading.set(true);
             set_error.set(None);
@@ -84,7 +86,26 @@ pub fn App() -> impl IntoView {
                     
                     }
                 }
-                Mode::GetTodoById => todo!(),
+                Mode::GetTodo => {
+                    let current_id = match current_id.parse::<i64>() {
+                        Ok(id) => id,
+                        Err(_) => {
+                            set_error.set(Some("Invalid ID".to_string()));
+                            set_is_loading.set(false);
+                            return;
+                        }
+                    };
+                    let url = format!("{}/{}", endpoint, current_id);
+                    match Request::get(&url).send().await {
+                        Ok(res) => res,
+                        Err(e) => {
+                            set_result.set(None);
+                            set_error.set(Some(format!("Network error: {e}")));
+                            set_is_loading.set(false);
+                            return;
+                        }
+                    }                    
+                },
                 Mode::UpdateTodo => todo!(),
             };
 
@@ -122,8 +143,14 @@ pub fn App() -> impl IntoView {
         <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
             <h1>"Todo App"</h1>
 
-            // add todo form
-            <AddTodo todo=todo set_todo=set_todo />
+            // Input generic panel
+            <InputPanel
+                mode=mode
+                todo=todo
+                set_todo=set_todo
+                todo_id=todo_id
+                set_todo_id=set_todo_id
+            />
 
             // error msg
             <ErrorMessage error=error />
@@ -134,11 +161,11 @@ pub fn App() -> impl IntoView {
                 set_mode=set_mode
                 send_request=send_request
                 is_loading=is_loading
-                modes=vec![Mode::ListTodo, Mode::AddTodo]
+                modes=vec![Mode::ListTodo, Mode::AddTodo, Mode::GetTodo]
             />
 
-            // List todo result
-            <Show when=move || mode.get() == Mode::ListTodo>
+            // todos response result
+            <Show when=move || mode.get() == Mode::ListTodo || mode.get() == Mode::GetTodo>
                 <ListTodoResult result=result />
             </Show>
 
