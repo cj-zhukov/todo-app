@@ -3,17 +3,17 @@ use web_sys::MouseEvent;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Mode {
-    ListTodo,
-    GetTodoById,
-    AddTodo,
-    UpdateTodo,
+    ListTodo,   // list all todos
+    GetTodo,    // get todo using id
+    AddTodo,    // create new todo
+    UpdateTodo, // update existing todo using id
 }
 
 impl AsRef<str> for Mode {
     fn as_ref(&self) -> &str {
         match self {
             Mode::ListTodo => "list",
-            Mode::GetTodoById => "get_by_id",
+            Mode::GetTodo => "get",
             Mode::AddTodo => "add",
             Mode::UpdateTodo => "update",
         }
@@ -37,6 +37,7 @@ pub fn OperationPanel(
                     match selected.as_str() {
                         "list" => set_mode.set(Mode::ListTodo),
                         "add" => set_mode.set(Mode::AddTodo),
+                        "get" => set_mode.set(Mode::GetTodo),
                         _ => unreachable!()
                     }
                 }
