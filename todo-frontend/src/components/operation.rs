@@ -7,6 +7,7 @@ pub enum Mode {
     GetTodo,    // get todo using id
     AddTodo,    // create new todo
     UpdateTodo, // update existing todo using id
+    DeleteTodo, // delete existing todo ising id
 }
 
 impl AsRef<str> for Mode {
@@ -16,6 +17,7 @@ impl AsRef<str> for Mode {
             Mode::GetTodo => "get",
             Mode::AddTodo => "add",
             Mode::UpdateTodo => "update",
+            Mode::DeleteTodo => "delete",
         }
     }
 }
@@ -38,6 +40,7 @@ pub fn OperationPanel(
                         "list" => set_mode.set(Mode::ListTodo),
                         "add" => set_mode.set(Mode::AddTodo),
                         "get" => set_mode.set(Mode::GetTodo),
+                        "delete" => set_mode.set(Mode::DeleteTodo),
                         _ => unreachable!()
                     }
                 }
