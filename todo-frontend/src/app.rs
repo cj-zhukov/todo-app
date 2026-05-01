@@ -47,7 +47,7 @@ pub fn App() -> impl IntoView {
             log!(
                 "Sending request to endpoint: {:?} with mode: {}",
                 endpoint,
-                current_mode.as_ref()
+                current_mode.as_str()
             );
             
             let request = match build_request(
@@ -129,11 +129,11 @@ pub fn App() -> impl IntoView {
                 set_mode=set_mode
                 send_request=send_request
                 is_loading=is_loading
-                modes=vec![Mode::ListTodo, Mode::AddTodo, Mode::GetTodo, Mode::DeleteTodo, Mode::UpdateTodo]
+                modes=Mode::ALL.to_vec()
             />
 
             // todos response result
-            <Show when=move || mode.get() == Mode::ListTodo || mode.get() == Mode::GetTodo || mode.get() == Mode::DeleteTodo || mode.get() == Mode::UpdateTodo>
+            <Show when=move || mode.get().shows_result()>
                 <TodoResult result=result />
             </Show>
 

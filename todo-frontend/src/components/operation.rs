@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use leptos::prelude::*;
 use web_sys::MouseEvent;
 
@@ -10,19 +12,54 @@ pub enum Mode {
     DeleteTodo, // delete existing todo ising id
 }
 
-impl AsRef<str> for Mode {
-    fn as_ref(&self) -> &str {
-        match self {
-            Mode::ListTodo => "list",
-            Mode::GetTodo => "get",
-            Mode::AddTodo => "add",
-            Mode::UpdateTodo => "update",
-            Mode::DeleteTodo => "delete",
-        }
+impl Mode {
+    pub const ALL: &'static [Mode] = &[
+        Mode::ListTodo,
+        Mode::AddTodo,
+        Mode::GetTodo,
+        Mode::DeleteTodo,
+        Mode::UpdateTodo,
+    ];
+
+    fn variants() -> &'static [(Mode, &'static str)] {
+        &[
+            (Mode::ListTodo, "list"),
+            (Mode::GetTodo, "get"),
+            (Mode::AddTodo, "add"),
+            (Mode::UpdateTodo, "update"),
+            (Mode::DeleteTodo, "delete"),
+        ]
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        Self::variants()
+            .iter()
+            .find(|(m, _)| m == self)
+            .map(|(_, s)| *s)
+            .unwrap()
+    }
+}
+
+impl FromStr for Mode {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Mode::variants()
+            .iter()
+            .find(|(_, name)| *name == s)
+            .map(|(m, _)| *m)
+            .ok_or(())
     }
 }
 
 impl Mode {
+    pub fn shows_result(&self) -> bool {
+        matches!(
+            self,
+            Mode::ListTodo | Mode::GetTodo | Mode::DeleteTodo | Mode::UpdateTodo
+        )
+    }
+
     pub fn needs_id(&self) -> bool {
         matches!(self, Mode::GetTodo | Mode::DeleteTodo | Mode::UpdateTodo)
     }
@@ -50,13 +87,8 @@ pub fn OperationPanel(
                 style="font-size: 1rem; padding: 0.5rem;"
                 on:change=move |ev| {
                     let selected = event_target_value(&ev);
-                    match selected.as_str() {
-                        "list" => set_mode.set(Mode::ListTodo),
-                        "add" => set_mode.set(Mode::AddTodo),
-                        "get" => set_mode.set(Mode::GetTodo),
-                        "delete" => set_mode.set(Mode::DeleteTodo),
-                        "update" => set_mode.set(Mode::UpdateTodo),
-                        _ => unreachable!()
+                    if let Ok(mode) = selected.parse::<Mode>() {
+                        set_mode.set(mode);
                     }
                 }
             >
@@ -64,7 +96,7 @@ pub fn OperationPanel(
                     each=move || modes.clone()
                     key=|m| *m as i32
                     children=move |m| {
-                        let value = m.as_ref().to_string();
+                        let value = m.as_str().to_string();
                         view! {
                             <option
                                 value=value.clone()
@@ -95,7 +127,7 @@ mod tests {
 
     #[test]
     fn test_operation_mode() {
-        assert_eq!(Mode::ListTodo.as_ref(), "list");
+        assert_eq!(Mode::ListTodo.as_str(), "list");
 
         let (mode, set_mode) = signal(Mode::ListTodo);
         set_mode.set(Mode::ListTodo);
