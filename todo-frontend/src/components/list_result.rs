@@ -12,7 +12,7 @@ struct TodosTable {
 }
 
 #[component]
-pub fn ListTodoResult(result: ReadSignal<Option<Value>>) -> impl IntoView {
+pub fn TodoResult(result: ReadSignal<Option<Value>>) -> impl IntoView {
     view! {
         <div style="width: 100%; text-align: center;">
             {move || {

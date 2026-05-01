@@ -4,7 +4,7 @@ use web_sys::MouseEvent;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Mode {
     ListTodo,   // list all todos
-    GetTodo,    // get todo using id
+    GetTodo,    // get existing todo using id
     AddTodo,    // create new todo
     UpdateTodo, // update existing todo using id
     DeleteTodo, // delete existing todo ising id
@@ -19,6 +19,20 @@ impl AsRef<str> for Mode {
             Mode::UpdateTodo => "update",
             Mode::DeleteTodo => "delete",
         }
+    }
+}
+
+impl Mode {
+    pub fn needs_id(&self) -> bool {
+        matches!(self, Mode::GetTodo | Mode::DeleteTodo | Mode::UpdateTodo)
+    }
+
+    pub fn needs_text(&self) -> bool {
+        matches!(self, Mode::AddTodo | Mode::UpdateTodo)
+    }
+
+    pub fn needs_completed(&self) -> bool {
+        matches!(self, Mode::UpdateTodo)
     }
 }
 
@@ -41,6 +55,7 @@ pub fn OperationPanel(
                         "add" => set_mode.set(Mode::AddTodo),
                         "get" => set_mode.set(Mode::GetTodo),
                         "delete" => set_mode.set(Mode::DeleteTodo),
+                        "update" => set_mode.set(Mode::UpdateTodo),
                         _ => unreachable!()
                     }
                 }
