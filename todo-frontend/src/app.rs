@@ -14,9 +14,15 @@ struct ApiTodoResponse {
     pub content: Value,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Serialize)]
 struct ApiTodoCreateRequest {
     pub body: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ApiTodoUpdateRequest {
+    pub body: String,
+    pub completed: bool,
 }
 
 #[component]
@@ -24,15 +30,17 @@ pub fn App() -> impl IntoView {
     let (is_loading, set_is_loading) = signal(false); // spinner
     let (error, set_error) = signal(None::<String>); // error msg
     let (result, set_result) = signal(None::<Value>); // todos response
-    let (todo, set_todo) = signal("Todo body".to_string()); // add todo form
+    let (todo, set_todo) = signal("Todo body".to_string()); // create or update todo 
     let (mode, set_mode) = signal(Mode::ListTodo); // mode
     let (todo_id, set_todo_id) = signal(String::new()); // todo id
+    let (todo_completed, set_todo_completed) = signal(false); // todo completed
 
     let send_request = move |_| {
         spawn_local(async move {
             let current_mode = mode.get_untracked();
             let current_todo = todo.get_untracked();
             let current_id = todo_id.get_untracked();
+            let current_completed = todo_completed.get_untracked();
             let endpoint = format!("{URL}todos");
             set_is_loading.set(true);
             set_error.set(None);
@@ -47,6 +55,7 @@ pub fn App() -> impl IntoView {
                 &endpoint,
                 current_todo,
                 current_id,
+                current_completed,
             ) {
                 Ok(req) => req,
                 Err(e) => {
@@ -107,6 +116,8 @@ pub fn App() -> impl IntoView {
                 set_todo=set_todo
                 todo_id=todo_id
                 set_todo_id=set_todo_id
+                completed=todo_completed
+                set_completed=set_todo_completed
             />
 
             // error msg
@@ -118,12 +129,12 @@ pub fn App() -> impl IntoView {
                 set_mode=set_mode
                 send_request=send_request
                 is_loading=is_loading
-                modes=vec![Mode::ListTodo, Mode::AddTodo, Mode::GetTodo, Mode::DeleteTodo]
+                modes=vec![Mode::ListTodo, Mode::AddTodo, Mode::GetTodo, Mode::DeleteTodo, Mode::UpdateTodo]
             />
 
             // todos response result
-            <Show when=move || mode.get() == Mode::ListTodo || mode.get() == Mode::GetTodo || mode.get() == Mode::DeleteTodo>
-                <ListTodoResult result=result />
+            <Show when=move || mode.get() == Mode::ListTodo || mode.get() == Mode::GetTodo || mode.get() == Mode::DeleteTodo || mode.get() == Mode::UpdateTodo>
+                <TodoResult result=result />
             </Show>
 
         </div>
@@ -135,6 +146,7 @@ fn build_request(
     endpoint: &str,
     todo: String,
     id: String,
+    completed: bool,
 ) -> Result<Request, String> {
     match mode {
         Mode::ListTodo => {
@@ -169,8 +181,20 @@ fn build_request(
                 .build()
                 .map_err(|e| e.to_string())
         }
+        
+        Mode::UpdateTodo => {
+            let id = id.parse::<i64>().map_err(|_| "Invalid ID")?;
+            let url = format!("{}/{}", endpoint, id);
+            let payload = ApiTodoUpdateRequest {
+                body: todo,
+                completed,
+            };
 
-        _ => unreachable!()
+            Request::put(&url)
+                .header("Content-Type", "application/json")
+                .json(&payload)
+                .map_err(|e| e.to_string())
+        }
     }
 }
 
